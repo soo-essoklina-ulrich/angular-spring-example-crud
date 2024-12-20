@@ -1,0 +1,226 @@
+<p-toast/>
+
+<div class="container">
+  <div class="row">
+    <div class="col-12">
+      <h1 class="text-center">Articles</h1>
+    </div>
+  </div>
+
+  <div class="content">
+    <p-table
+      [value]="articlelist"
+      [tableStyle]="{'min-width': '60rem'}"
+      [paginator]="true"
+      [rows]="5"
+      styleClass="card"
+      [rowsPerPageOptions]="[5, 10, 25, 50]"
+    >
+      <ng-template #caption>
+        <div class="d-flex justify-content-between">
+          <p-floatlabel>
+            <input id="search" type="text" (input)="filterArticle($event)" pInputText/>
+            <label for="search">Search</label>
+          </p-floatlabel>
+          <div class="d-flex justify-content-center">
+            <p-button
+              pTooltip="Refresh"
+              tooltipPosition="top"
+              type="button"
+              icon="pi pi-refresh"
+              class="m-1"
+              (click)="getArticles()"
+            ></p-button>
+            <p-button
+              pTooltip="Add"
+              tooltipPosition="top"
+              type="button"
+              icon="pi pi-plus"
+              class="m-1"
+              (click)="showModal()"
+            ></p-button>
+          </div>
+
+        </div>
+      </ng-template>
+      <ng-template #header>
+        <tr>
+          <th></th>
+          <th pSortableColumn="titre" style="width:20%">
+            Titre
+            <p-sortIcon field="titre"/>
+          </th>
+          <th pSortableColumn="content" style="width:20%"
+          >Content
+            <p-sortIcon field="content"/>
+          </th>
+          <th pSortableColumn="rating" style="width:20%">
+            Rating
+            <p-sortIcon field="rating"/>
+          </th>
+          <th pSortableColumn="prix" style="width: 20%">
+            Prix
+            <p-sortIcon field="prix"/>
+          </th>
+          <th></th>
+        </tr>
+      </ng-template>
+      <ng-template #body let-product let-index="rowIndex">
+        <tr>
+          <td>{{ index + 1 }}</td>
+          <td>{{ product.title }}</td>
+          <td [innerHTML]="product.content"></td>
+          <td>{{ product.rating }}</td>
+          <td>{{ product.prix| currency:'XOF' }}</td>
+          <td>
+            <div
+              class="d-flex justify-content-center"
+            >
+              <p-button
+                pTooltip="Edit"
+                tooltipPosition="top"
+                icon="pi pi-pencil"
+                class="m-1"
+                (click)="selectArticle(product.id)"
+              ></p-button>
+              <p-button
+                pTooltip="Delete"
+                tooltipPosition="top"
+                icon="pi pi-trash"
+                class="m-1"
+                (click)="deleteArticle(product.id)"
+              ></p-button>
+            </div>
+
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+
+
+  <p-dialog header="Ajout Article" position="top" [(visible)]="visible" [style]="{ width: '60rem' }">
+    <div class="card">
+      <form [formGroup]="form">
+        <p-stepper [value]="1" class="basis-[50rem]">
+          <p-step-list>
+            <p-step [value]="1">Info</p-step>
+            <p-step [value]="2">Description</p-step>
+
+          </p-step-list>
+          <p-step-panels>
+            <p-step-panel [value]="1">
+              <ng-template #content let-activateCallback="activateCallback">
+                <div class="flex flex-col h-48">
+                  <div
+                    class="border-2 border-dashed border-surface-200 dark:border-surface-700 rounded bg-surface-50 dark:bg-surface-950 flex-auto flex justify-center items-center font-medium"
+                  >
+                    <div class="row d-flex  container pl-2">
+                      <label for="title">Title</label>
+                      <input id="title" type="text" pInputText formControlName="title" class="col-12 mb-1"/>
+
+
+                      <p-rating formControlName="rating" class="my-2 col" [stars]="6"/>
+
+                      <label for="prix">Prix</label>
+                      <input id="prix" type="number" pInputText formControlName="prix"/>
+
+
+                    </div>
+
+                  </div>
+                  <div class="d-flex mt-2 pt-6 justify-content-end p-2">
+                    <p-button label="Next" icon="pi pi-arrow-right" iconPos="right" (onClick)="activateCallback(2)"/>
+                  </div>
+                </div>
+              </ng-template>
+            </p-step-panel>
+
+            <p-step-panel [value]="2">
+              <ng-template #content let-activateCallback="activateCallback">
+                <div class="flex flex-col h-48">
+                  <div
+                    class="border-2 border-dashed border-surface-200 dark:border-surface-700 rounded bg-surface-50 dark:bg-surface-950 flex-auto flex justify-center items-center font-medium"
+                  >
+                    <div class="row container ">
+                      <label for="content">Content</label>
+                      <textarea rows="5" id="content" cols="30" pTextarea formControlName="content"></textarea>
+                    </div>
+                  </div>
+                </div>
+                <div class=" d-flex mt-3 pt-6 px-2 justify-content-between">
+                  <p-button label="Back" severity="secondary" icon="pi pi-arrow-left" (onClick)="activateCallback(1)"/>
+                  <p-button label="Send Data" icon="pi pi-send" iconPos="right" (onClick)="sendArticle()"
+                            [disabled]="form.invalid"/>
+                </div>
+              </ng-template>
+            </p-step-panel>
+          </p-step-panels>
+        </p-stepper>
+      </form>
+    </div>
+  </p-dialog>
+
+  <p-dialog [header]="'pdate Article '+article?.title" position="top" [(visible)]="visibleupdate"
+            [style]="{ width: '60rem' }">
+    <div class="card">
+      <form [formGroup]="form">
+        <p-stepper [value]="1" class="basis-[50rem]">
+          <p-step-list>
+            <p-step [value]="1">Info</p-step>
+            <p-step [value]="2">Description</p-step>
+
+          </p-step-list>
+          <p-step-panels>
+            <p-step-panel [value]="1">
+              <ng-template #content let-activateCallback="activateCallback">
+                <div class="flex flex-col h-48">
+                  <div
+                    class="border-2 border-dashed border-surface-200 dark:border-surface-700 rounded bg-surface-50 dark:bg-surface-950 flex-auto flex justify-center items-center font-medium"
+                  >
+                    <div class="row d-flex  container pl-2">
+                      <label for="titleu">Title</label>
+                      <input id="titleu" type="text" pInputText formControlName="title" class="col-12 mb-1"/>
+
+
+                      <p-rating formControlName="rating" class="my-2 col" [stars]="6"/>
+
+                      <label for="prixu">Prix</label>
+                      <input id="prixu" type="number" pInputText formControlName="prix"/>
+
+
+                    </div>
+
+                  </div>
+                  <div class="d-flex mt-2 pt-6 justify-content-end p-2">
+                    <p-button label="Next" icon="pi pi-arrow-right" iconPos="right" (onClick)="activateCallback(2)"/>
+                  </div>
+                </div>
+              </ng-template>
+            </p-step-panel>
+
+            <p-step-panel [value]="2">
+              <ng-template #content let-activateCallback="activateCallback">
+                <div class="flex flex-col h-48">
+                  <div
+                    class="border-2 border-dashed border-surface-200 dark:border-surface-700 rounded bg-surface-50 dark:bg-surface-950 flex-auto flex justify-center items-center font-medium"
+                  >
+                    <div class="row container ">
+                      <label for="contentu">Content</label>
+                      <textarea rows="5" id="contentu" cols="30" pTextarea formControlName="content"></textarea>
+                    </div>
+                  </div>
+                </div>
+                <div class=" d-flex mt-3 pt-6 px-2 justify-content-between">
+                  <p-button label="Back" severity="secondary" icon="pi pi-arrow-left" (onClick)="activateCallback(1)"/>
+                  <p-button label="Send Data" icon="pi pi-send" iconPos="right" (onClick)="updateArticle()"
+                            [disabled]="form.invalid"/>
+                </div>
+              </ng-template>
+            </p-step-panel>
+          </p-step-panels>
+        </p-stepper>
+      </form>
+    </div>
+  </p-dialog>
+</div>
